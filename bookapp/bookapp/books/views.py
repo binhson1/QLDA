@@ -10,18 +10,19 @@ from django.shortcuts import render
 from rest_framework import viewsets, status, generics
 from rest_framework.views import APIView
 
-from apps import serializers, pagination
-from apps.models import *
+from books import serializers, pagination
+from books.models import *
 
 from rest_framework import viewsets, status, generics, parsers
 
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps import serializers, permissions
-from apps.models import *
-from apps.vnpay import vnpay
+from books import serializers, permissions
+from books.models import *
+from books.vnpay import vnpay
 from bookapp import settings
+
 
 class TagViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Tag.objects.all()
@@ -53,6 +54,7 @@ class PublisherViewSet(viewsets.ViewSet, generics.ListAPIView):
             queries = queries.filter(name__icontains=q)
 
         return queries
+
 
 class AuthorViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Author.objects.all()
@@ -113,3 +115,167 @@ class CartViewSet(viewsets.ViewSet, generics.CreateAPIView):
 class Book_CartViewSet(viewsets.ViewSet, generics.DestroyAPIView, generics.UpdateAPIView):
     queryset = Book_Cart.objects.all()
     serializer_class = serializers.Book_CartSerializer
+
+
+class EmployeeViewSet(viewsets.ViewSet, generics.CreateAPIView, generics.ListAPIView):
+    queryset = Employee.objects.all()
+    serializer_class = serializers.EmployeeSerializer
+
+    def get_queryset(self):
+        queries = self.queryset
+        q = self.request.query_params.get("name")
+        if q:
+            queries = queries.filter(first_name__icontains=q) | queries.filter(Last_name__icontains=q)
+
+        return queries
+
+
+class ReceiptViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = Receipt.objects.all()
+    serializer_class = serializers.ReceiptSerializer
+
+    def create(self, request, *args, **kwargs):
+        order_id = request.data.get('order_id')
+        address = request.data.get('address')
+        receipt = Receipt.objects.create(id=order_id, customer=request.user, address=address,
+                                         status=Receipt.StatusChoices.UNPAID, method=request.data.get('method'))
+        cart = Cart.objects.get(customer_account=request.user)
+        book_cart = Book_Cart.objects.filter(cart=cart)
+        total_quantity = 0
+        total_amount = 0
+        for book in book_cart:
+            book_price = book.book.price
+            quantity = book.quantity
+            total_quantity += quantity
+            promotions = Book_Promotion.objects.filter(book=book.book)
+            for p in promotions:
+                promotion = Promotion.objects.get(id=p.promotion.id)
+                book_price = float(book_price) - float(book.book.price) * float(promotion.discount_percent) / 100
+            total_price = book_price * quantity
+            total_amount += total_price
+            b = Book.objects.get(id=book.book.id)
+            b.stock_quantity = b.stock_quantity - quantity
+            b.save()
+            receiptDetail = ReceiptDetail.objects.create(receipt=receipt, book=book.book, quantity=quantity,
+                                                         book_price=book_price, total_price=total_price)
+        receipt.quantity = total_quantity
+        receipt.total_price = total_amount
+        receipt.save()
+        book_cart.delete()
+        return Response(status=status.HTTP_201_CREATED)
+
+
+class ReceiptDetailViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = ReceiptDetail.objects.all()
+    serializer_class = serializers.ReceiptDetailSerializer
+
+
+class CustomerViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
+    queryset = Customer.objects.all()
+    serializer_class = serializers.CustomerSerializer
+
+    @action(methods=['post'], url_path='is_valid', detail=False)
+    def check_is_valid_customer(self, request):
+        try:
+            customer = Customer.objects.get(phone_numbers=request.data.get('phone'))
+            return Response(status=status.HTTP_200_OK)
+        except Customer.DoesNotExist:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = User.objects.filter(is_active=True).all()
+    serializer_class = serializers.UserSerializer
+    parser_classes = [parsers.MultiPartParser, ]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Tạo user mới
+        self.perform_create(serializer)
+
+        # Lấy user vừa tạo
+        user_instance = serializer.instance
+
+        # Tạo cart cho user với user_id là khóa ngoại
+        cart = Cart.objects.create(customer_account=user_instance)
+
+        # Tạo customer cho user
+        phone = request.data.get('phone')
+        fullname = request.data.get('first_name') + request.data.get('last_name')
+        if phone:
+            customer = Customer.objects.create(account=user_instance, fullname=fullname, phone_numbers=phone)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['get', 'patch'], url_path='current-user', detail=False)
+    def get_current_user(self, request):
+        user = request.user
+        if request.method.__eq__("PATCH"):
+            for k, v in request.data.items():
+                setattr(user, k, v)  # user.k = v (user.name = v)
+            user.save()
+
+        return Response(serializers.UserSerializer(user).data)
+
+    @action(methods=['post'], url_path='customer', detail=False, parser_classes=[parsers.JSONParser])
+    def get_customer_by_user(self, request):
+        try:
+            customer = Customer.objects.get(account__id=request.data.get('user_id'))
+            return Response(serializers.CustomerSerializer(customer).data, status=status.HTTP_200_OK)
+        except Customer.DoesNotExist:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['post'], url_path='is_valid', detail=False, parser_classes=[parsers.JSONParser])
+    def check_is_valid_user(self, request):
+        try:
+            user_by_email = User.objects.get(email=request.data.get('email'))
+            return Response(status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PromotionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
+    queryset = Promotion.objects.all()
+    serializer_class = serializers.PromotionSerializer
+
+
+class Book_PromotionViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = Book_Promotion.objects.filter(active=True)
+    serializer_class = serializers.Book_PromotionSerializer
+
+
+class CategoryViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+
+    @action(methods=['get'], url_path='books', detail=True)
+    def get_book_by_cate(self, request, pk):
+        category = self.get_object()
+        books = Book_Category.objects.filter(category=category)
+        return Response(serializers.Book_CategorySerializer(books, many=True).data, status=status.HTTP_200_OK)
+
+
+def create_tokens(user):
+    # Xóa các access token và refresh token cũ của user (nếu có)
+    AccessToken.objects.filter(user=user).delete()
+    RefreshToken.objects.filter(user=user).delete()
+    Application = get_application_model()
+    application = Application.objects.get(id=1)
+    expires = timezone.now() + timezone.timedelta(seconds=oauth2_settings.ACCESS_TOKEN_EXPIRE_SECONDS)
+    access_token = AccessToken.objects.create(
+        user=user,
+        token=generate_token(),
+        expires=expires,
+        scope='read write',  # Phạm vi của token
+        application=application  # Thay bằng application nếu có
+    )
+
+    refresh_token = RefreshToken.objects.create(
+        user=user,
+        token=generate_token(),
+        access_token=access_token,
+        application=application  # Thay bằng application nếu có
+    )
+
+    return access_token, refresh_token

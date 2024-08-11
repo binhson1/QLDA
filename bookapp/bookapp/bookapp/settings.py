@@ -102,13 +102,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bookdb2',
         'USER': 'root',
-        'PASSWORD': 'Sonhaian123.',
+        # 'PASSWORD': 'Sonhaian123.',
         'PASSWORD': '123456',
         'HOST': ''  # mặc định localhost
     }
 }
 
-AUTH_USER_MODEL = 'apps.User'
+AUTH_USER_MODEL = 'books.User'
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
