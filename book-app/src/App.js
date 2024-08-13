@@ -1,25 +1,30 @@
 import logo from './logo.svg';
 import './App.css';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import BookSearch from './components/pages/BookSearch';
 
 function App() {
+  const [user, dispatch] = Reactt.useReducer(MyUserReducer, null);
+  const [cart, dispatchCart] = React.useReducer(MyCartReducer, null);
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <>
+      <BrowserRouter>
+        <MyContext.Provider value={[user, dispatch]}>
+          <CartContext.Provider value={[cart, dispatchCart]}>
+            <Header></Header>
+            <Routes>
+              <Route exact path="/" element={<Home></Home>} />
+              <Route path="/books/" element={<BookSearch></BookSearch>} />
+            </Routes>
+            <Footer></Footer>
+          </CartContext.Provider>
+        </MyContext.Provider>
+      </BrowserRouter>
+    </>
+  )
 }
 
 export default App;
