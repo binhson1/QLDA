@@ -12,22 +12,28 @@ const BookCard = ({ book }) => {
   const [, dispatchCart] = React.useContext(CartContext);
 
   const addToCart = async (bookId, quantity) => {
-    let res = await authAPI(cookie.load('access_token')).post(endpoints['add-cart'](bookId), {
-      "quantity": quantity
-    })
-    let cart_res = await authAPI(cookie.load("access_token")).get(endpoints['book-cart']);
+    let res = await authAPI(cookie.load("access_token")).post(
+      endpoints["add-cart"](bookId),
+      {
+        quantity: quantity,
+      }
+    );
+    let cart_res = await authAPI(cookie.load("access_token")).get(
+      endpoints["book-cart"]
+    );
     dispatchCart({
       type: "update",
-      payload: cart_res.data
-    })
-  }
+      payload: cart_res.data,
+    });
+  };
 
   React.useEffect(() => {
     if (book.promotion.length > 0) {
       let discount_price = book.price;
       book.promotion.forEach((p) => {
-        discount_price = discount_price - book.price * p.discount_percent / 100;
-      })
+        discount_price =
+          discount_price - (book.price * p.discount_percent) / 100;
+      });
       setDiscountPrice(discount_price);
     }
   }, []);
@@ -62,13 +68,13 @@ const BookCard = ({ book }) => {
                 className="card-text text-danger m-0"
                 style={{ cursor: "pointer" }}
               >
-                {discountPrice.toLocaleString('vi-VN')}đ
+                {discountPrice.toLocaleString("vi-VN")}đ
               </p>
               <p
                 className="card-text text-body-tertiary text-decoration-line-through m-0"
                 style={{ cursor: "pointer" }}
               >
-                {book.price.toLocaleString('vi-VN')}đ
+                {book.price.toLocaleString("vi-VN")}đ
               </p>
             </div>
             {user ? (

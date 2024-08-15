@@ -55,10 +55,6 @@ const BookDetail = () => {
     loadBook();
   }, [bookId]);
 
-  React.useEffect(() => {
-    loadComments();
-  }, [book]);
-
   if (!book) {
     return <div>Loading ....</div>;
   }
