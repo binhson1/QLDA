@@ -170,6 +170,68 @@ class ReceiptDetailViewSet(viewsets.ViewSet, generics.CreateAPIView):
     serializer_class = serializers.ReceiptDetailSerializer
 
 
+class PaymentAPIViewSet(viewsets.ViewSet):
+    def create(self, request):
+        form = request.data
+        if form:
+            order_type = form.get('order_type')
+            order_id = form.get('order_id')
+            amount = form.get('amount')
+            order_desc = form.get('order_desc')
+            ipaddr = form.get('ipaddr')
+
+            # Build URL Payment
+            vnp = vnpay()
+            vnp.requestData['vnp_Version'] = '2.1.0'
+            vnp.requestData['vnp_Command'] = 'pay'
+            vnp.requestData['vnp_TmnCode'] = 'OZE0N6YH'
+            vnp.requestData['vnp_Amount'] = amount * 100
+            vnp.requestData['vnp_CurrCode'] = 'VND'
+            vnp.requestData['vnp_TxnRef'] = order_id
+            vnp.requestData['vnp_OrderInfo'] = order_desc
+            vnp.requestData['vnp_OrderType'] = order_type
+            vnp.requestData['vnp_Locale'] = 'vn'
+
+            vnp.requestData['vnp_CreateDate'] = datetime.now().strftime('%Y%m%d%H%M%S')
+            vnp.requestData['vnp_IpAddr'] = ipaddr
+            vnp.requestData['vnp_ReturnUrl'] = "http://localhost:3000/cart"
+            vnpay_payment_url = vnp.get_payment_url("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html",
+                                                    "Y306ETVLWUW53592DB5Q94GY99SPFI1P")
+            print(vnpay_payment_url)
+
+            # Redirect to VNPAY
+            return Response(data={'url': vnpay_payment_url}, status=status.HTTP_201_CREATED)
+        else:
+            # Handle invalid form data
+            return Response({"error": "Invalid form data"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PaymentReturnAPIViewSet(viewsets.ViewSet):
+    def create(self, request):
+        form = request.data
+        if form:
+            vnp = vnpay()
+            vnp.responseData["vnp_TxnRef"] = form.get('vnp_TxnRef')
+            vnp.responseData["vnp_Amount"] = float(form.get('vnp_Amount')) / 100
+            vnp.responseData["vnp_OrderInfo"] = form.get('vnp_OrderInfo')
+            vnp.responseData["vnp_TransactionNo"] = form.get('vnp_TransactionNo')
+            vnp.responseData["vnp_ResponseCode"] = form.get('vnp_ResponseCode')
+            vnp.responseData["vnp_TmnCode"] = form.get('vnp_TmnCode')
+            vnp.responseData["vnp_PayDate"] = form.get('vnp_PayDate')
+            vnp.responseData["vnp_BankCode"] = form.get('vnp_BankCode')
+            vnp.responseData["vnp_CardType"] = form.get('vnp_CardType')
+            vnp.responseData["vnp_BankTranNo"] = form.get('vnp_BankTranNo')
+            vnp.responseData["vnp_TransactionStatus"] = form.get('vnp_TransactionStatus')
+            vnp.responseData["vnp_SecureHash"] = form.get('vnp_SecureHash')
+            if form.get('vnp_ResponseCode') == '00':
+                receipt = Receipt.objects.get(id=form.get('vnp_TxnRef'))
+                receipt.status = Receipt.StatusChoices.PAID
+                receipt.save()
+                return Response(status=status.HTTP_200_OK)
+            else:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class CustomerViewSet(viewsets.ViewSet, generics.ListAPIView, generics.CreateAPIView):
     queryset = Customer.objects.all()
     serializer_class = serializers.CustomerSerializer

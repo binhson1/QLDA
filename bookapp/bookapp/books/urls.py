@@ -17,6 +17,8 @@ r.register('promotion', views.PromotionViewSet, basename='promotion')
 r.register('book_promotion', views.Book_PromotionViewSet, basename='book_promotion')
 r.register('send_mail', send_mail.SendEmailViewSet, basename='send_mail')
 r.register('book_cart', views.Book_CartViewSet, basename='book_cart')
+r.register('vnpay_payment', views.PaymentAPIViewSet, basename='vnpay_payment')
+r.register('vnpay_payment_return', views.PaymentReturnAPIViewSet, basename='vnpay_payment_return')
 
 urlpatterns = [
     path('', include(r.urls))

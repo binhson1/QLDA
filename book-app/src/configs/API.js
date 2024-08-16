@@ -14,15 +14,17 @@ export const endpoints = {
   "book-cart": "/cart/books/",
   "add-cart": (bookId) => `/books/${bookId}/add_cart/`,
   remove_book_cart: (bookId) => `/book_cart/${bookId}/`,
+  "receipt": '/receipt/',
+  "vnpay_payment": '/vnpay_payment/',
+  "vnpay_payment_return": '/vnpay_payment_return/',
 };
 
 export const authAPI = (accessToken) =>
   axios.create({
     baseURL: HOST,
     headers: {
-      Authorization: `Bearer ${
-        accessToken ? accessToken : cookie.load("access-token")
-      }`,
+      Authorization: `Bearer ${accessToken ? accessToken : cookie.load("access-token")
+        }`,
     },
   });
 
