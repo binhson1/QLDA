@@ -116,7 +116,7 @@ const Header = () => {
             <div className="me-2 text-white text-decoration-none text-hover">
               <Link className="navbar-brand" to="/user">
                 <img
-                  src="https://www.w3schools.com/bootstrap5/img_avatar1.png"
+                  src={user.avatar}
                   alt="Avatar Logo"
                   style={{ width: "40px" }}
                   className="rounded-pill"

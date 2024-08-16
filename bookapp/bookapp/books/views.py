@@ -163,6 +163,16 @@ class ReceiptViewSet(viewsets.ViewSet, generics.CreateAPIView):
         receipt.save()
         book_cart.delete()
         return Response(status=status.HTTP_201_CREATED)
+    
+     def list(self, request):
+        user = request.user
+        customer = Customer.objects.get(account_id=user.id)
+        if user:
+            receipts = Receipt.objects.filter(customer=customer.id)
+        else:
+            receipts = Receipt.objects.all()
+        serializer = serializers.ReceiptSerializer(receipts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ReceiptDetailViewSet(viewsets.ViewSet, generics.CreateAPIView):
