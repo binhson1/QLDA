@@ -20,6 +20,7 @@ import CartContext from "./configs/CartContext";
 import { authAPI, endpoints } from "./configs/API";
 import UserOrder from "./components/pages/UserOrder";
 import Employee from "./components/pages/Employee";
+import User from "./components/pages/User";
 
 function App() {
   const [user, dispatch] = React.useReducer(MyUserReducer, null);
@@ -70,6 +71,7 @@ function App() {
               <Route path="/OTP/" element={<OTP></OTP>} />
               <Route path="/pickAvatar/" element={<PickAvatar></PickAvatar>} />
               <Route path="/employee/" element={<Employee />} />
+              <Route path="/user" element={<User></User>} />
             </Routes>
             <Footer></Footer>
           </CartContext.Provider>
