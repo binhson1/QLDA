@@ -48,7 +48,7 @@ function PickAvatar() {
             const userChatCollectionRef = collection(db, 'UserChat');
             const userCollection = collection(db, 'Users');
             const newData = {
-                users: [user_uuid, "WCDISAsP2pcNliXaGU6WRIhtRwy2"],
+                user: [user_uuid, "WCDISAsP2pcNliXaGU6WRIhtRwy2"],
                 created_date: currentDate
             };
             let user_data = await API.post(endpoints['login'], {
@@ -62,15 +62,18 @@ function PickAvatar() {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+            console.log(user_data.data);
             let res_user = await authAPI(user_data.data.access_token).get(endpoints['current-user']);
+            console.log(res_user.data);
             const newUser = {
                 uid: user_uuid,
                 username: form.get('username'),
                 firstName: form.get('first_name'),
                 lastName: form.get('last_name'),
                 phone: form.get('phone'),
-                avatar: res_user.avatar
+                avatar: res_user.data.avatar
             }
+            console.log(newUser);
             const docUserRef = await addDoc(userCollection, newUser);
             const docRef = await addDoc(userChatCollectionRef, newData);
             location.state = {

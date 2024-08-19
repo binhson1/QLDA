@@ -4,6 +4,7 @@ import API, { authAPI, endpoints } from "../../configs/API";
 import cookie from "react-cookies";
 import MyContext from "../../configs/MyContext";
 import CartContext from "../../configs/CartContext";
+import { Navigate } from "react-router-dom";
 
 const Employee = () => {
   const [username, setUserName] = useState("");
@@ -38,14 +39,14 @@ const Employee = () => {
         }
       );
       let res_employee = await authAPI(res.data.access_token).get(
-        endpoints["current-employee"]
+        endpoints["current-user"]
       );
       dispatch({
         type: "login",
         payload: res_employee.data,
       });
-      await cookie.save("employee", res_employee.data);
-      await cookie.save("employee_access_token", res.data.access_token);
+      await cookie.save("user", res_employee.data);
+      await cookie.save("access_token", res.data.access_token);
     } catch (error) {
       //   setMessage(error.res_employee.data.message);
       console.log(error.res_employee);
@@ -142,7 +143,13 @@ const Employee = () => {
       payload: cart_res.data,
     });
   };
-  return user ? (
+
+  React.useEffect(() => {
+    console.log(user);
+  }, [user]);
+
+
+  return user && user.role == 1 ? (
     <div className="container" style={{ margin: "20px" }}>
       <h1 style={{ textAlign: "center", color: "#333" }}>Danh sách sản phẩm</h1>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -188,73 +195,6 @@ const Employee = () => {
           ))}
         </tbody>
       </table>
-      <>
-        <table className="table">
-          <tr>
-            <th></th>
-            <th>Tên sản phẩm</th>
-            <th>Giá gốc</th>
-            <th>Đơn giá</th>
-            <th>Kho còn lại</th>
-            <th>Số lượng</th>
-            <th></th>
-          </tr>
-          {newCart !== null &&
-            newCart.map((c) => (
-              <tr
-                key={c.id}
-                id={`product${c.book.id}`}
-                className="align-middle"
-              >
-                <td>
-                  <img
-                    src={c.book.image}
-                    alt=""
-                    style={{ width: "100px", height: "100px" }}
-                  />
-                </td>
-                <td>{c.book.title}</td>
-                <td>{c.book.price}đ</td>
-                <td>{c.book.discount_price}đ</td>
-                <td>{c.book.stock_quantity}</td>
-                <td>
-                  <input
-                    type="number"
-                    onBlur={(e) => updateBooks(c.id, e.target.value)}
-                    defaultValue={c.quantity}
-                    className="form-control"
-                    style={{ width: "50px" }}
-                  />
-                </td>
-                <td>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => deleteBooks(c.id)}
-                  >
-                    &times;
-                  </button>
-                </td>
-              </tr>
-            ))}
-        </table>
-        <div className="row alert alert-info">
-          <div className=" col-9">
-            <h3>
-              Tổng tiền:{" "}
-              <span className="cart-amount">{total.total_price}</span> VNĐ
-            </h3>
-            <h3>
-              Tổng số lượng:{" "}
-              <span className="cart-counter">{total.total_quantity}</span>
-            </h3>
-          </div>
-          <div className="col-3 text-center m-auto">
-            <button className="btn btn-danger" style={{ fontSize: "30px" }}>
-              Thanh toán
-            </button>
-          </div>
-        </div>
-      </>
     </div>
   ) : (
     <div className="login-container">

@@ -164,7 +164,7 @@ class ReceiptViewSet(viewsets.ViewSet, generics.CreateAPIView):
         book_cart.delete()
         return Response(status=status.HTTP_201_CREATED)
     
-     def list(self, request):
+    def list(self, request):
         user = request.user
         customer = Customer.objects.get(account_id=user.id)
         if user:

@@ -17,6 +17,7 @@ const Header = () => {
     try {
       let res = await API.get(endpoints["category"]);
       setCates(res.data);
+      console.log(res.data);
     } catch (ex) {
       console.error(ex);
     }

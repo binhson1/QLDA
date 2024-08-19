@@ -52,9 +52,10 @@ const Login = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-      let sign_in = await signInWithEmailAndPassword(auth, user.username, user.password);
-      res_user.data.uid = sign_in.user.uid;
       let res_user = await authAPI(res.data.access_token).get(endpoints['current-user']);
+      let sign_in = await signInWithEmailAndPassword(auth, res_user.data.email, user.password);
+      res_user.data.uid = sign_in.user.uid;
+
       dispatch({
         "type": "login",
         "payload": res_user.data

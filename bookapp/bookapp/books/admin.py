@@ -14,8 +14,8 @@ class MyAdminSite(admin.AdminSite):
 
     def get_urls(self):
         return [
-                   path('book-stats/', self.stats_view, name='stats_view')
-               ] + super().get_urls()
+            path('book-stats/', self.stats_view, name='stats_view')
+        ] + super().get_urls()
 
     def stats_view(self, request):
         current_year = datetime.now().year
@@ -33,9 +33,7 @@ class MyAdminSite(admin.AdminSite):
                              .annotate(total_sold=Sum('quantity'))
                              .order_by('-total_sold')[:3])
 
-
         return TemplateResponse(request, 'admin/stats.html', {
-
             'monthly_revenue': monthly_revenue,
             'top_selling_books': top_selling_books,
         })

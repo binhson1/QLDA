@@ -22,6 +22,7 @@ import UserOrder from "./components/pages/UserOrder";
 import Employee from "./components/pages/Employee";
 import User from "./components/pages/User";
 import Chat from "./components/pages/Chat";
+import Payment from "./components/pages/Payment"
 function App() {
   const [user, dispatch] = React.useReducer(MyUserReducer, null);
   const [cart, dispatchCart] = React.useReducer(MyCartReducer, null);
@@ -43,6 +44,7 @@ function App() {
         payload: cookie.load("user"),
       });
     }
+    console.log(cookie.load("user"));
   }, []);
 
   React.useEffect(() => {
@@ -73,6 +75,7 @@ function App() {
               <Route path="/employee/" element={<Employee />} />
               <Route path="/user" element={<User></User>} />
               <Route path="/chat/" element={<Chat></Chat>} />
+              <Route path="/payment" element={<Payment></Payment>} />
             </Routes>
             <Footer></Footer>
           </CartContext.Provider>
