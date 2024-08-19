@@ -9,6 +9,7 @@ const Logout = () => {
     const logout = async () => {
         cookie.remove("user", { path: '/' });
         cookie.remove("access_token", { path: '/' });
+        cookie.remove("uid", { path: '/' });
         dispatch({
             "type": "logout"
         });

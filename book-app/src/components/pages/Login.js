@@ -3,6 +3,9 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import API, { authAPI, endpoints } from "../../configs/API";
 import cookie from 'react-cookies'
 import MyContext from "../../configs/MyContext";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../configs/firebase";
+import { Form } from "react-bootstrap";
 const Login = () => {
   const [user, setUser] = React.useState({
     "username": "",
@@ -49,6 +52,8 @@ const Login = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
+      let sign_in = await signInWithEmailAndPassword(auth, user.username, user.password);
+      res_user.data.uid = sign_in.user.uid;
       let res_user = await authAPI(res.data.access_token).get(endpoints['current-user']);
       dispatch({
         "type": "login",
@@ -107,7 +112,7 @@ const Login = () => {
             />
           </div>
           <div className="col-md-8 col-lg-6 col-xl-4 offset-xl-1">
-            <form onSubmit={login}>
+            <Form onSubmit={login}>
               <div className="d-flex flex-row align-items-center justify-content-center justify-content-lg-start">
                 <p className="lead fw-normal mb-0 me-3">Đăng nhập bằng</p>
                 <button
@@ -182,7 +187,7 @@ const Login = () => {
                   </Link>
                 </p>
               </div>
-            </form>
+            </Form>
           </div>
         </div>
       </div>

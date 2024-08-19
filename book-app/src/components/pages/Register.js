@@ -7,7 +7,7 @@ const Register = () => {
   const fields = [{
     label: "Họ",
     type: "text",
-    field: "firs_tname",
+    field: "first_name",
     placeholder: "Nhập họ..."
   }, {
     label: "Tên",

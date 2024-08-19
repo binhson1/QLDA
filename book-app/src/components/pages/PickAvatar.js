@@ -1,6 +1,9 @@
 import React, { useRef, useState } from 'react';
-import API, { endpoints } from "../../configs/API";
+import API, { authAPI, endpoints } from "../../configs/API";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { addDoc, collection, doc, setDoc, Timestamp } from "firebase/firestore";
+import { auth, db } from '../../configs/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 function PickAvatar() {
     const [selectedImage, setSelectedImage] = useState(null);
@@ -35,6 +38,41 @@ function PickAvatar() {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+            const userFirebase = await createUserWithEmailAndPassword(
+                auth,
+                form.get('email'),
+                form.get('password')
+            );
+            const user_uuid = userFirebase.user.uid;
+            const currentDate = Timestamp.now();
+            const userChatCollectionRef = collection(db, 'UserChat');
+            const userCollection = collection(db, 'Users');
+            const newData = {
+                users: [user_uuid, "WCDISAsP2pcNliXaGU6WRIhtRwy2"],
+                created_date: currentDate
+            };
+            let user_data = await API.post(endpoints['login'], {
+                'username': user.username,
+                'password': user.password,
+                'client_id': "t9rkxBTnZrPI4eS5ocYZ70Ie35n4mYBhWKWSxWFf",
+                'client_secret': "D9PQ38Usjnh4vheVbzdHQDMPAjB4Q3KD4cRhcSlAb7TCslWAW44H5nUMe1Et1ki91XYz8YSZ5ejPXzdywiDkQINQBIMqeGOgrISbCrBpDNwck6pZdZomlulS2WstCXbv",
+                "grant_type": "password"
+            }, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            let res_user = await authAPI(user_data.data.access_token).get(endpoints['current-user']);
+            const newUser = {
+                uid: user_uuid,
+                username: form.get('username'),
+                firstName: form.get('first_name'),
+                lastName: form.get('last_name'),
+                phone: form.get('phone'),
+                avatar: res_user.avatar
+            }
+            const docUserRef = await addDoc(userCollection, newUser);
+            const docRef = await addDoc(userChatCollectionRef, newData);
             location.state = {
                 ...location.state,
                 success: undefined
