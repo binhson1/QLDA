@@ -35,6 +35,45 @@ const BookDetail = () => {
     }
   };
 
+  const addComment = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    try {
+      let res = await authAPI(cookie.load("access_token")).post(
+        endpoints["add-comment"],
+        {
+          book: bookId,
+          content: content,
+        }
+      );
+      if (res.status === 201) {
+        setSuccess("Đăng bình luận thành công!");
+        setContent("");
+      }
+      if (res.status === 403) {
+        setError("Bạn phải mua hàng thì mới được bình luận.");
+        console.log(res.status);
+      }
+    } catch (err) {
+      if (err) {
+        // setError("Lỗi vui lòng thử lại sau !");
+        console.log(err.status);
+      }
+    }
+  };
+
+  const loadComments = async () => {
+    try {
+      let res = await API.get(`${endpoints["books"]}${bookId}/comments/`);
+      setComments(res.data);
+      console.log(comments);
+    } catch (ex) {
+      console.error(ex);
+    }
+  };
+
   const addToCart = async () => {
     let res = await authAPI(cookie.load("access_token")).post(
       endpoints["add-cart"](bookId),
@@ -54,6 +93,10 @@ const BookDetail = () => {
   React.useEffect(() => {
     loadBook();
   }, [bookId]);
+
+  React.useEffect(() => {
+    loadComments();
+  }, [book]);
 
   if (!book) {
     return <div>Loading ....</div>;
@@ -138,18 +181,72 @@ const BookDetail = () => {
         <div dangerouslySetInnerHTML={{ __html: book.description }} />
         <hr className="mt-2" />
       </div>
-      <ul className="pagination mt-1 justify-content-center">
-        {/* {% for i in range(pages) %} */}
-        <li className="page-item">
-          <a
-            className="page-link {% if page|int == (i + 1) %}bg-primary text-white{% endif %}"
-            href="{{ url_for('chi_tiet_san_pham', sach_id=sach['id'], page=i+1) }}"
+      <div className="row ms-md-4 mt-4">
+        <h3>Bình luận</h3>
+        <form onSubmit={addComment}>
+          <div>
+            <textarea
+              value={content}
+              className="w-100 p-2"
+              style={{ resize: "none" }}
+              onChange={(e) => setContent(e.target.value)}
+              rows="5"
+              placeholder="Viết nội dung đánh giá của bạn"
+              name="binhluan"
+              id="binhluan"
+            ></textarea>
+            <div className="text-end">
+              {user ? (
+                <>
+                  <button className="btn btn-primary" type="submit">
+                    Đánh giá
+                  </button>
+                  {error && <p style={{ color: "red" }}>{error}</p>}
+                  {success && <p style={{ color: "green" }}>{success}</p>}
+                </>
+              ) : (
+                <Link className="btn btn-primary" to={"/login"}>
+                  Đăng nhập để đánh giá
+                </Link>
+              )}
+            </div>
+          </div>
+        </form>
+        <hr className="mt-2" />
+      </div>
+      {comments !== undefined &&
+        comments.length > 0 &&
+        comments.map((com) => (
+          <div
+            className="comment"
+            style={{
+              marginBottom: "20px",
+              padding: "15px",
+              border: "1px solid #eee",
+              borderRadius: "5px",
+              backgroundColor: "#fff",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
           >
-            i + 1{" "}
-          </a>
-        </li>
-        {/* {% endfor %} */}
-      </ul>
+            <h3
+              style={{ marginBottom: "10px", color: "#333", fontSize: "18px" }}
+            >
+              {com.customer.username}
+            </h3>
+            <p
+              className="date"
+              style={{ marginBottom: "10px", color: "#999", fontSize: "14px" }}
+            >
+              {com.created_date}
+            </p>
+            <p
+              style={{ marginBottom: "10px", color: "#555", fontSize: "16px" }}
+            >
+              {com.content}
+            </p>
+            <hr style={{ border: "0", borderTop: "1px solid #eee" }} />
+          </div>
+        ))}
     </div>
   );
 };
