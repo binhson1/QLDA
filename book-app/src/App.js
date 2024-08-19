@@ -18,8 +18,10 @@ import Cart from "./components/pages/Cart";
 import MyCartReducer from "./reducers/MyCartReducer";
 import CartContext from "./configs/CartContext";
 import { authAPI, endpoints } from "./configs/API";
+import UserOrder from "./components/pages/UserOrder";
+import Employee from "./components/pages/Employee";
+import User from "./components/pages/User";
 import Chat from "./components/pages/Chat";
-
 function App() {
   const [user, dispatch] = React.useReducer(MyUserReducer, null);
   const [cart, dispatchCart] = React.useReducer(MyCartReducer, null);
@@ -63,10 +65,13 @@ function App() {
                 path="/books/:bookId"
                 element={<BookDetail></BookDetail>}
               />
+              <Route path="/user-orders" element={<UserOrder />} />
               <Route path="/login/" element={<Login></Login>} />
               <Route path="/register/" element={<Register></Register>} />
               <Route path="/OTP/" element={<OTP></OTP>} />
               <Route path="/pickAvatar/" element={<PickAvatar></PickAvatar>} />
+              <Route path="/employee/" element={<Employee />} />
+              <Route path="/user" element={<User></User>} />
               <Route path="/chat/" element={<Chat></Chat>} />
             </Routes>
             <Footer></Footer>

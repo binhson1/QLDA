@@ -133,7 +133,7 @@ class Book_CartSerializer(serializers.ModelSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Customer
+        model = User
         fields = '__all__'
 
 
