@@ -102,8 +102,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bookdb2',
         'USER': 'root',
-        # 'PASSWORD': 'Sonhaian123.',
-        'PASSWORD': '123456',
+        'PASSWORD': 'Sonhaian123.',
+        # 'PASSWORD': '123456',
         'HOST': ''  # mặc định localhost
     }
 }
